@@ -8,7 +8,9 @@ require "raft_algorithm_ruby"
 # with your gem easier. You can also use a different console, if you like.
 
 require "irb"
-@cluster = RaftAlgorithmRuby::Cluster.new(5)
+@cluster = RaftAlgorithmRuby::Cluster.new(rand(1..10))
 
 @leader = @cluster.leader
+@cluster.propose("Set x = #{rand(1..50)}")
+
 IRB.start(__FILE__)

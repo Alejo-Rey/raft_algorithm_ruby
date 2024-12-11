@@ -1,28 +1,52 @@
 # RaftAlgorithmRuby
 
-TODO: Delete this and the text below, and describe your gem
+**RaftAlgorithmRuby** is an implementation of the Raft consensus algorithm in Ruby. This gem allows simulating a distributed system with nodes that can elect leaders, replicate logs, and handle network failures.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/raft_algorithm_ruby`. To experiment with that code, run `bin/console` for an interactive prompt.
+---
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
+### Requirements
+1. **Ruby** version 3.0 or higher.
+2. **Bundler** installed globally (`gem install bundler`).
 
-Install the gem and add to the application's Gemfile by executing:
+### Steps
+1. Clone this repository or download the compressed file.
+2. Navigate to the project directory:
+   ```bash
+   cd raft_algorithm_ruby
+2. **Start the Console**:
+    ```bash
+   ruby bin/console
+   
+## Explanation
+    The `bin/console` script is designed to provide an interactive environment to test and visualize how the Raft consensus algorithm works within the implemented gem. 
 
-```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
-```
+    When you run the script, the following actions are performed:
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+1. **Cluster Initialization**:
+    - A cluster of nodes is created with a random size between 1 and 10:
+      ```ruby
+        @cluster = RaftAlgorithmRuby::Cluster.new(rand(1..10))
+      ```
+    - This simulates a distributed system with nodes capable of communicating and participating in leader election processes.
 
-```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
-```
+2. **Leader Election**:
+    - The cluster automatically elects a leader. The leader is responsible for managing the system's state and ensuring consistency across nodes:
+      ```ruby
+        @leader = @cluster.leader
+      ```
+    - This showcases the election phase of the Raft algorithm, which ensures a single leader exists at any given time.
 
-## Usage
+3. **Proposing Commands**:
+    - The leader can propose commands to the cluster. These commands are replicated across all nodes:
+      ```ruby
+        @cluster.propose("Set x = #{rand(1..50)}")
+      ```
+    - This demonstrates the log replication phase of the algorithm, ensuring all nodes agree on a shared state.
 
-TODO: Write usage instructions here
+4. **Interactive Experimentation**:
+    - After the script runs, you can explore the cluster's state, view the nodes' logs, and simulate system behaviors such as node failures or re-elections.
 
 ## Development
 
