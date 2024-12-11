@@ -15,7 +15,8 @@
 2. Navigate to the project directory:
    ```bash
    cd raft_algorithm_ruby
-2. **Start the Console**:
+   bundle install
+3. **Start the Console**:
     ```bash
    ruby bin/console
    
