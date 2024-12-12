@@ -28,7 +28,7 @@
 1. **Cluster Initialization**:
     - A cluster of nodes is created with a random size between 1 and 10:
       ```ruby
-        @cluster = RaftAlgorithmRuby::Cluster.new(rand(1..10))
+        @cluster = RaftAlgorithmRuby::Cluster.new(rand(5..8))
       ```
     - This simulates a distributed system with nodes capable of communicating and participating in leader election processes.
 
@@ -46,7 +46,17 @@
       ```
     - This demonstrates the log replication phase of the algorithm, ensuring all nodes agree on a shared state.
 
-4. **Interactive Experimentation**:
+4. **Partition Management**:
+   - The `Partition` class manages groups of nodes that form a subset of the main cluster. Each partition operates independently, electing its own leader and managing communication between its nodes.
+   - First, select the necessary nodes to the new partition
+     ```ruby
+        nodes = @cluster.nodes.sample 2
+      ```
+   - Then you can create the partition with those nodes
+     ```ruby
+        @cluster.create_partition(nodes)
+     ```
+5. **Interactive Experimentation**:
     - After the script runs, you can explore the cluster's state, view the nodes' logs, and simulate system behaviors such as node failures or re-elections.
 
 ## Development

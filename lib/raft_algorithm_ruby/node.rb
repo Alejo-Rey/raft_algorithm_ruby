@@ -1,24 +1,20 @@
 # frozen_string_literal: true
 
 class RaftAlgorithmRuby::Node
-  attr_accessor :id, :state, :log, :peers, :current_term, :voted_for, :commit_index, :last_applied, :next_index, :match_index, :total_votes, :heartbeat_timer
+  attr_accessor :id, :state, :log, :peers, :current_term, :voted_for, :total_votes, :heartbeat_timer
 
   # Initialize the node
   # @param [Integer] id: Unique identifier for the node
   def initialize(id)
     @id = id
-    @peers = [] # List of peers
-    @state = :follower # Initial state
-    @current_term = 1 # Current term of the node
+    @peers = []
+    @state = :follower
+    @current_term = 1
     @total_votes = 0
     @voted_for = nil
-    @log = [] # Log entries
-    @commit_index = 0 # Last confirmed log index
-    @last_applied = 0 # Last index applied to the state
-    @next_index = {} # Next log index for each peer (used by leader)
-    @match_index = {} # Last successfully replicated index for each peer (leader)
-    @election_timer = nil # Temporizador para manejar elecciones
-    @heartbeat_timer = nil # Temporizador para enviar heartbeats (líder)
+    @log = []
+    @election_timer = nil
+    @heartbeat_timer = nil
   end
 
   ### Peer Management ###
@@ -40,10 +36,11 @@ class RaftAlgorithmRuby::Node
   # Transition to a new state
   # @param [Symbol] new_state: The new state (:follower, :candidate, :leader)
   def transition_to(new_state)
-    append_to_log("Transitioning from #{@state} to #{new_state}")
+    old_state = @state
+
+    append_to_log("Node: #{@id} transitioning from #{old_state} to #{new_state}")
 
     @state = new_state
-
     if new_state == :leader
       start_heartbeat_timer
     else
@@ -55,12 +52,12 @@ class RaftAlgorithmRuby::Node
 
   # Start an election for leadership
   def start_election
-    RaftAlgorithmRuby.logger.info "start_election Node: #{@id}"
-    transition_to(:candidate)
+    RaftAlgorithmRuby.logger.info "start_election Node: #{@id}, state: #{@state}"
     @current_term += 1
+    transition_to(:candidate)
     @total_votes = 1
 
-    puts "Node #{@id}: Starting election for term #{@current_term}."
+    RaftAlgorithmRuby.logger.info "Node #{@id}: Starting election for term #{@current_term}."
 
     @peers.each do |peer|
       if peer.request_votes_from_peer(peer)
@@ -69,11 +66,11 @@ class RaftAlgorithmRuby::Node
     end
 
     if @total_votes > (@peers.size + 1) / 2
-      puts "Node #{@id}: Won the election with #{@total_votes} votes."
+      RaftAlgorithmRuby.logger.info  "Node #{@id}: Won the election with #{@total_votes} votes."
       transition_to(:leader)
     else
-      puts "Node #{@id}: Election failed with #{@total_votes} votes."
-      transition_to(:follower)
+      RaftAlgorithmRuby.logger.error "Node #{@id}: Election failed with #{@total_votes} votes."
+      transition_to(:follower) if @state == :candidate
     end
   end
 
@@ -94,16 +91,15 @@ class RaftAlgorithmRuby::Node
     if term > @current_term
       @current_term = term
       @voted_for = nil
-      transition_to(:follower)
     end
 
     if (@voted_for.nil? || @voted_for == candidate_id) && term >= @current_term
       @voted_for = candidate_id
       puts "Node #{@id}: Voted for Node #{candidate_id} in term #{term}."
-      return true
+      true
     else
       puts "Node #{@id}: Rejected vote for Node #{candidate_id}."
-      return false
+      false
     end
   end
 
@@ -167,11 +163,9 @@ class RaftAlgorithmRuby::Node
   # Start a timer to send heartbeats
   def start_heartbeat_timer
     timeout = rand(0.15..0.3)
-    puts "Node #{@id}: Starting heartbeat timer for #{(timeout * 1000).round}ms."
+    RaftAlgorithmRuby.logger.info "Node #{@id}: Starting heartbeat timer for #{(timeout * 1000).round}ms."
 
-    # @election_timer = Thread.new do
     begin
-      # sleep(timeout)
       if @state != :leader
         puts "Node #{@id}: No heartbeat received within #{(timeout * 1000).round}ms. Starting election."
         @heartbeat_timer = timeout
@@ -179,10 +173,9 @@ class RaftAlgorithmRuby::Node
         puts "Node #{@id}: Timer stopped as the node is now a leader."
       end
     rescue StandardError => e
-      puts "Error in Node #{@id}: #{e.message}"
-      puts e.backtrace
+      RaftAlgorithmRuby.logger.error "In Node #{@id}: #{e.message}"
+      RaftAlgorithmRuby.logger.error e.backtrace
     end
-    # end
   end
 
   # Reset timers
@@ -190,5 +183,12 @@ class RaftAlgorithmRuby::Node
     @election_timer&.kill
     @election_timer = nil
     # @heartbeat_timer&.kill
+  end
+
+  # Display information about the node
+  def node_info
+    puts "Node #{@id}: State: #{@state}, Term: #{@current_term}, Voted For: #{@voted_for || 'None'}, " \
+         "Peers: #{@peers.map(&:id).join(', ') || 'No peers'}, " \
+         "Logs: #{@log.map { |entry| entry[:command] }.join(', ') || 'No logs'}"
   end
 end
