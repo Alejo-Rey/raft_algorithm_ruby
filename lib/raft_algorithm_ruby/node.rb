@@ -115,13 +115,13 @@ class RaftAlgorithmRuby::Node
 
   def propose(command)
     if @state != :leader
-      puts "Node #{@id}: Cannot propose, not the leader."
+      RaftAlgorithmRuby.logger.error "Node #{@id}: Cannot propose, not the leader."
       return false
     end
     @current_term += 1
     append_to_log(command)
 
-    puts "Node #{@id}: Created proposal: #{command}."
+    RaftAlgorithmRuby.logger.info "Node #{@id}: Created proposal: #{command}."
 
     replicate_log(command)
     true
@@ -139,9 +139,9 @@ class RaftAlgorithmRuby::Node
     success = peer.receive_append_entries(@current_term, command)
     if success
       append_to_log(command)
-      puts "Node #{@id}: Successfully replicated log to Node #{peer.id}."
+      RaftAlgorithmRuby.logger.info "Node #{@id}: Successfully replicated log to Node #{peer.id}."
     else
-      puts "Node #{@id}: Failed to replicate log to Node #{peer.id}. Retrying..."
+      RaftAlgorithmRuby.logger.error "Node #{@id}: Failed to replicate log to Node #{peer.id}. Retrying..."
       false
     end
   end

@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "partition"
-module RaftAlgorithmRuby
-  class Cluster
+class RaftAlgorithmRuby::Cluster
 
   attr_accessor :nodes, :leaders, :partitions
 
@@ -23,12 +22,12 @@ module RaftAlgorithmRuby
   end
 
   def propose(command)
-    if @leaders.nil?
-      puts "No leader to propose the command."
+    if @leaders.empty?
+      RaftAlgorithmRuby.logger.error "No leader to propose the command."
       return false
     end
 
-    @leaders.each { |leader| leader.propose(command) }
+    @leaders.all? { |leader| leader.propose(command) }
   end
 
   # @param [Array[nodes]] nodes
@@ -57,16 +56,21 @@ module RaftAlgorithmRuby
     @partitions << partition
 
     partition
+  rescue StandardError => e
+    RaftAlgorithmRuby.logger.error "Fail creating partition: #{e.message}"
+    RaftAlgorithmRuby.logger.error e.backtrace
   end
 
+  # @return [Array[nodes]] with state :leader
   def leaders
     @leaders = partitions.map(&:leader)
     RaftAlgorithmRuby.logger.info "Leaders: #{@leaders.map(&:id)}"
+    @leaders
   end
 
   # @return [Array[nodes]]
   def nodes
-    @partitions.first.nodes
+    @partitions.flat_map(&:nodes)
   end
 
   # Display information about the cluster
@@ -79,10 +83,12 @@ module RaftAlgorithmRuby
   end
 
   def cluster_nodes_logs
-    @nodes.each do |node|
+    nodes.each do |node|
       puts "Node #{node.id}: Term: #{node.current_term}, logs: #{node.log}"
     end
-    puts "Current Leader: #{@leaders&.id || "No leader"}"
-  end
+    @leaders.each do |leader|
+      puts "Current Leader: #{leader.id}" if leader
+    end
+    puts "No leader" if @leaders.empty?
   end
 end

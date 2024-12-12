@@ -21,8 +21,8 @@ class RaftAlgorithmRuby::Partition
   # Add a node to the cluster
   # @param [RaftAlgorithmRuby::Node] node: Node to add
   def add_node(node)
-    @partitions.first.nodes << node
-    @partitions.first.assign_peers
+    self.nodes << node
+    self.assign_peers
   end
 
 
